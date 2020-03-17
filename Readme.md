@@ -1,4 +1,4 @@
-#PostGreSQL evaluation
+# PostgreSQL evaluation
 
 ## General impressions
 * Easy to set up
@@ -17,4 +17,7 @@ With 2 indices:
     10,000-30,000 rows/sec....
     
 What about parallelism?  No effect when sharing the same connection
+
+#### Query Performance
+ IP queries run in 100s of ms and uuid queries in about 50ms.  For 85 million rows, non-indexed queries run in 4s!
  
