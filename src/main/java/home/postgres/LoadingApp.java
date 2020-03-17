@@ -1,18 +1,17 @@
 package home.postgres;
 
 import com.google.common.base.Stopwatch;
-import com.google.common.net.InetAddresses;
-import com.google.common.util.concurrent.Futures;
-import de.bytefish.pgbulkinsert.row.SimpleRow;
 import de.bytefish.pgbulkinsert.row.SimpleRowWriter;
 import org.postgresql.jdbc.PgConnection;
 import org.postgresql.util.HostSpec;
 
-import java.net.Inet4Address;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class LoadingApp {
@@ -50,23 +49,15 @@ public class LoadingApp {
         }
     }
 
-    private static void perfBenchmark(PgConnection pgConnection) throws SQLException, ExecutionException, InterruptedException {
+    private static void perfBenchmark(PgConnection pgConnection) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        List<Future<?>> futures = new ArrayList<>();
         for (int i = 0; i < BATCH_COUNT; i++) {
-           futures.add(exec.submit(() ->  batchInsert(pgConnection)));
-//            System.out.printf("Completed batch [%s], current rate is [%s]\n", i,
-//                    (i+1) * BATCH_SIZE / stopwatch.elapsed(TimeUnit.SECONDS));
+            batchInsert(pgConnection);
+            System.out.printf("Completed batch [%s], current rate is [%s]\n", i,
+                    (i + 1) * BATCH_SIZE / stopwatch.elapsed(TimeUnit.SECONDS));
         }
 
-        while (!futures.isEmpty()) {
-            Future<?> first = futures.iterator().next();
-            first.get();
-            futures.remove(first);
-            System.out.println("Completed future");
-        }
         System.out.println(BATCH_COUNT * BATCH_SIZE / stopwatch.elapsed(TimeUnit.SECONDS));
-        exec.shutdown();
     }
 
     private static void batchInsert(PgConnection pgConnection) {
